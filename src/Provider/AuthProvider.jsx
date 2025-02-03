@@ -1,6 +1,6 @@
-import { createContext, useState } from "react"
+import { createContext, useEffect, useState } from "react"
 import auth from "../farebase.init";
-import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext(null);
@@ -19,16 +19,32 @@ const AuthProvider = ({children}) => {
         return createUserWithEmailAndPassword(auth, email, password)
     }
 
-    onAuthStateChanged(auth, (currentUser) => {
-        if(currentUser){
-            console.log( 'currently logged user' ,currentUser)
-            setUser(currentUser)
+    const signOutUser = () => {
+       return signOut(auth);
+    }
+
+
+
+
+    useEffect(()=>{
+        const unSubscribe = onAuthStateChanged(auth,(currentUser)=> {
+            if(currentUser){
+                console.log(currentUser);
+                setUser(currentUser)
+
+            }
+            else{
+                console.log("no current user")
+                setUser(null)
+            }
+        })
+        return () => {
+            unSubscribe();
         }
-        else{
-            console.log("no user logged in")
-            setUser(null)
-        }
-    })
+
+
+    } ,[])
+
 
 
 
@@ -36,6 +52,7 @@ const AuthProvider = ({children}) => {
        name,
        createUser,
        signinUser,
+       signOut,
        user
     }
     return (
